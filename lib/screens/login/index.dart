@@ -1,59 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_app/state/auth.dart';
+import 'package:flutter_app/storage.dart';
+import 'package:go_router/go_router.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
-  @override
-  State<LoginScreen> createState() => _LoginScreen();
-}
-
-class _LoginScreen extends State<LoginScreen> {
-  bool _isObscure = true;
-
-  void handleShowPassword() {
-    setState(() {
-      _isObscure = !_isObscure;
-    });
-  }
-
-  void handleLogin() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    Navigator.pushNamedAndRemoveUntil(
-        context, '/home', ModalRoute.withName('/home'));
-    prefs.setBool('_isLogin', true);
-  }
+class LoginScreen extends HookConsumerWidget {
+  const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     Widget userName = const TextField(
       decoration: InputDecoration(labelText: 'User name'),
     );
 
-    Widget password = TextField(
-      decoration: InputDecoration(
-          labelText: 'Password',
-          suffixIcon: IconButton(
-              onPressed: handleShowPassword,
-              icon:
-                  Icon(_isObscure ? Icons.visibility : Icons.visibility_off))),
-      obscureText: _isObscure,
+    Widget password = const TextField(
+      decoration: InputDecoration(labelText: 'Password'),
     );
 
-    Widget login =
-        TextButton(onPressed: handleLogin, child: const Text('Login'));
+    Widget login = TextButton(
+      onPressed: () async {
+        // if (checkNull) {
+        final authArgs = AuthArgs(
+          email: 'admin',
+          password: 'admin',
+        );
+        ref.read(authLoginProvider(authArgs));
+        final isAuthenticated = ref.read(getIsAuthenticatedProvider);
+        if (isAuthenticated.value!) {
+          context.go('/home');
+        }
+        // }
+      },
+      child: const Text('Login'),
+    );
 
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          appBar: AppBar(title: const Text('Login')),
-          body: Center(
-            child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: <Widget>[userName, password, login],
-                )),
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Login')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: <Widget>[userName, password, login],
+            ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }

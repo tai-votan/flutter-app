@@ -1,24 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_app/screens/home/index.dart';
 import 'package:flutter_app/screens/login/index.dart';
-import 'package:flutter_app/screens/landing.dart';
+import 'package:flutter_app/storage.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends HookConsumerWidget {
   const MyApp({super.key});
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
+      title: 'Login',
       debugShowCheckedModeBanner: false,
+      home: ref
+          .watch(
+            getIsAuthenticatedProvider,
+          )
+          .when(
+            data: (bool isAuthenticated) =>
+                isAuthenticated ? const HomeScreen() : const LoginScreen(),
+            loading: () {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            },
+            error: (error, stacktrace) => const LoginScreen(),
+          ),
       routes: {
-        '/': (context) => const Landing(),
-        '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
+        "home": (context) => const HomeScreen(),
+        "login": (context) => const LoginScreen(),
       },
     );
   }
